@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script src="scripts.js"></script>
+    <script src="includes/scripts.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <title>Title</title>
     <style>
@@ -19,7 +19,7 @@
         }
         input[type=radio] {
 				display:none; 
-				margin:10px;
+				margin:50px;
 			}
     </style>
 </head>
@@ -27,8 +27,8 @@
     <div class="card-body">
     <div class="input-group">
         <div class="custom-file">
-            <input type="file" class="custom-file-input" id="files" aria-describedby="inputGroupFileAddon01">
-            <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+            <input type="file" class="custom-file-input" id="inputfile" name="inputfile" aria-describedby="inputGroupFileAddon">
+            <label class="custom-file-label" for="inputGroupFile">Choose file</label>
         </div>
     </div>
     <div id="menu" style="display:block">
@@ -79,6 +79,17 @@
     var currentAction = 'move';
     var datafile = [];
 
+    document.getElementById('inputfile') 
+        .addEventListener('change', function() {
+              
+        var fr = new FileReader(); 
+        fr.onload=function(){ 
+            datafile = fr.result.split('\n');
+            draw();
+        }  
+        fr.readAsText(this.files[0]);
+    }) 
+
     // Changes the current state of the app, depending on the action
     function changeCurrent(action){
         document.getElementById(currentAction).style.display = "none";
@@ -118,10 +129,15 @@
     // Calculate move function
     function drawMove(x,y) {
         datafile = datafile.map((item) => {
+            typeof item[1] === "string" ? item[1] = parseInt(item[1]) : {...item[1]};
+            typeof item[2] === "string" ? item[2] = parseInt(item[2]) : {...item[2]};
+            typeof item[3] === "string" ? item[3] = parseInt(item[3]) : {...item[3]};
+            if (item[4] !== undefined && typeof item[4] === "string")
+                item[4] = parseInt(item[4]);
             if (item[0] === 'L') {
-                return ['L',item[1]+x,item[2]+y,item[3]+x,item[4]+y]
+                return [item[0], item[1] + x, item[2] + y, item[3] + x, item[4] + y]
             } else {
-                return ['C',item[1]+x,item[2]+y,item[3]]
+                return [item[0], item[1] + x, item[2] + y, item[3]]
             }
         });
     }
@@ -167,10 +183,12 @@
     function mirrorX() {
         clear();
         datafile = datafile.map((item) => {
+            typeof item === "string" ? item = item.trim() : {...item};
+            typeof item === "string" ? item = item.split(',') : {...item};
             if (item[0] === 'L') {
-                return ['L',-item[1],item[2],-item[3],item[4]]
+                return [item[0], -item[1], item[2], -item[3], item[4]]
             } else {
-                return ['C',-item[1],item[2],item[3]]
+                return [item[0], -item[1], item[2], item[3]]
             }
         });
         drawMove(1000,0);
@@ -181,10 +199,12 @@
     function mirrorY() {
         clear();
         datafile = datafile.map((item) => {
+            typeof item === "string" ? item = item.trim() : {...item};
+            typeof item === "string" ? item = item.split(',') : {...item};
             if (item[0] === 'L') {
-                return ['L',item[1],-item[2],item[3],-item[4]]
+                return [item[0], item[1], -item[2], item[3], -item[4]]
             } else {
-                return ['C',item[1],-item[2],item[3]]
+                return [item[0], item[1], -item[2], item[3]]
             }
         });
         drawMove(0,800);
@@ -219,11 +239,14 @@
 
     // Draw the image after manipulation
     function draw() {
-        datafile.forEach((item) => {
+        datafile.forEach(item => {
+            typeof item === "string" ? item = item.trim() : {...item};
+            typeof item === "string" ? item = item.split(',') : {...item};
+            
             if (item[0] === 'L') {
-                drawline(item[1],item[2],item[3],item[4])
+                drawline(item[1], item[2], item[3], item[4])
             } else {
-                drawCircle(item[1],item[2],item[3])
+                drawCircle(item[1], item[2], item[3])
             }
         })
     }
@@ -263,28 +286,6 @@
             clickActive = false;
         }
     }
-
-    datafile = [
-        ['L',400,400,800,400],
-        ['L',800,400,700,500],
-        ['L',700,500,500,500],
-        ['L',500,500,400,400],
-        ['L',600,400,600,200],
-        ['L',600,200,605,200],
-        ['L',605,200,605,400],
-        ['L',600,200,500,350],
-        ['L',500,350,600,350],
-        ['C',500,450,20],
-        ['L',480,450,520,450],
-        ['L',500,430,500,470],
-        ['C',600,450,20],
-        ['L',580,450,620,450],
-        ['L',600,430,600,470],
-        ['C',700,450,20],
-        ['L',680,450,720,450],
-        ['L',700,430,700,470],
-    ];
-
-    draw();
+   
 </script>
 </html>
