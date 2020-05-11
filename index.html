@@ -18,7 +18,7 @@
             border: 1px solid black;
         }
         input[type=radio] {
-				display:none; 
+				display:none;
 				margin:50px;
 			}
     </style>
@@ -36,7 +36,7 @@
         <button onclick="changeCurrent('scale')">SCALE</button>
         <button onclick="changeCurrent('rotate')">ROTATE</button>
         <button onclick="changeCurrent('mirror')">MIRROR</button>
-        <button onclick="changeCurrent('strafe')">STRAFE</button>
+        <button onclick="changeCurrent('shear')">STRAFE</button>
     </div>
 </div>
     <div id="move" style="display:none">
@@ -65,8 +65,7 @@
         <p>Click the buttons to mirror the image</p>
     </div>
     <div id="shear" style="display:none">
-        <button onclick="shear()">SHEAR</button>
-        <p>After clicking the button you will be able to shear by draggin top/bottom</p>
+        <p>you will be able to shear by draggin top/bottom</p>
     </div>
     <canvas id="main" width="1000px" height="800px"></canvas>
 </body>
@@ -79,16 +78,25 @@
     var currentAction = 'move';
     var datafile = [];
 
-    document.getElementById('inputfile') 
+    document.getElementById('inputfile')
         .addEventListener('change', function() {
-              
-        var fr = new FileReader(); 
-        fr.onload=function(){ 
+        var fr = new FileReader();
+        fr.onload=function(){
+            fr.result.replace(' ','');
             datafile = fr.result.split('\n');
+            datafile.forEach((item,i) => {
+                datafile[i] = item.split(',');
+                datafile[i].forEach((subItem,si) => {
+                    if (!isNaN(subItem)) {
+                        datafile[i][si] = Number(subItem);
+                    }
+                })
+            });
+            console.log(datafile);
             draw();
-        }  
+        }
         fr.readAsText(this.files[0]);
-    }) 
+    })
 
     // Changes the current state of the app, depending on the action
     function changeCurrent(action){
@@ -129,15 +137,10 @@
     // Calculate move function
     function drawMove(x,y) {
         datafile = datafile.map((item) => {
-            typeof item[1] === "string" ? item[1] = parseInt(item[1]) : {...item[1]};
-            typeof item[2] === "string" ? item[2] = parseInt(item[2]) : {...item[2]};
-            typeof item[3] === "string" ? item[3] = parseInt(item[3]) : {...item[3]};
-            if (item[4] !== undefined && typeof item[4] === "string")
-                item[4] = parseInt(item[4]);
             if (item[0] === 'L') {
-                return [item[0], item[1] + x, item[2] + y, item[3] + x, item[4] + y]
+                return ['L',item[1]+x,item[2]+y,item[3]+x,item[4]+y]
             } else {
-                return [item[0], item[1] + x, item[2] + y, item[3]]
+                return ['C',item[1]+x,item[2]+y,item[3]]
             }
         });
     }
@@ -183,12 +186,10 @@
     function mirrorX() {
         clear();
         datafile = datafile.map((item) => {
-            typeof item === "string" ? item = item.trim() : {...item};
-            typeof item === "string" ? item = item.split(',') : {...item};
             if (item[0] === 'L') {
-                return [item[0], -item[1], item[2], -item[3], item[4]]
+                return ['L',-item[1],item[2],-item[3],item[4]]
             } else {
-                return [item[0], -item[1], item[2], item[3]]
+                return ['C',-item[1],item[2],item[3]]
             }
         });
         drawMove(1000,0);
@@ -199,12 +200,10 @@
     function mirrorY() {
         clear();
         datafile = datafile.map((item) => {
-            typeof item === "string" ? item = item.trim() : {...item};
-            typeof item === "string" ? item = item.split(',') : {...item};
             if (item[0] === 'L') {
-                return [item[0], item[1], -item[2], item[3], -item[4]]
+                return ['L',item[1],-item[2],item[3],-item[4]]
             } else {
-                return [item[0], item[1], -item[2], item[3]]
+                return ['C',item[1],-item[2],item[3]]
             }
         });
         drawMove(0,800);
@@ -239,14 +238,11 @@
 
     // Draw the image after manipulation
     function draw() {
-        datafile.forEach(item => {
-            typeof item === "string" ? item = item.trim() : {...item};
-            typeof item === "string" ? item = item.split(',') : {...item};
-            
+        datafile.forEach((item) => {
             if (item[0] === 'L') {
-                drawline(item[1], item[2], item[3], item[4])
+                drawline(item[1],item[2],item[3],item[4])
             } else {
-                drawCircle(item[1], item[2], item[3])
+                drawCircle(item[1],item[2],item[3])
             }
         })
     }
@@ -286,6 +282,6 @@
             clickActive = false;
         }
     }
-   
+
 </script>
 </html>
