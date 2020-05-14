@@ -1,0 +1,27 @@
+*{
+    margin: 0px;
+    padding: 0px;
+}
+
+#wrapper{
+    width: 1000px;
+    height: 1000px;
+    margin: 0px auto;
+}
+
+body {
+    text-align:center;
+}
+#menu {
+    padding: 10px 10px;
+    display: block;
+    border: 1px solid grey;
+    text-align: center;
+}
+canvas {
+    border: 1px solid black;
+}
+input[type=radio] {
+        display:none;
+        margin:50px;
+}
