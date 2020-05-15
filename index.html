@@ -21,6 +21,10 @@
 				display:none;
 				margin:10px;
 			}
+        #center-wrap {
+            margin-top:10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -29,7 +33,7 @@
     <div class="input-group">
         <div class="custom-file">
             <input type="file" multiple="multiple" class="custom-file-input" id="inputfile" name="inputfile" aria-describedby="inputGroupFileAddon">
-            <label class="custom-file-label" for="inputGroupFile">Choose file</label>
+            <label class="custom-file-label" for="inputGroupFile">Click To Choose File</label>
         </div>
     </div>
     <div id="menu" style="display:block">
@@ -40,6 +44,7 @@
         <button onclick="changeCurrent('shear')">SHEAR</button>
         <button id="clear">CLEAR</button>
     </div>
+        <div id="center-wrap">Current Center Point: <span id="center-point"></span> <button onclick="changeCurrent('setcenter')">Set Center Point</button> <button onclick="calculateMiddlePoint()">Reset</button></div>
 </div>
     <div id="move" style="display:none">
         X:
@@ -50,16 +55,16 @@
         <p>Please select the number of pixels to move (EX. 20,30)</p>
     </div>
     <div id="scale" style="display:none">
-        PX:
-        <input id="scalex" type="text" value="0.0">
+        Percentage (%):
+        <input id="scalex" type="text" value="100">
         <button onclick="scale()">SCALE</button>
-        <p>Please select the scale to increase in decimal (EX. 0.75)</p>
+        <p>Please select the scale to increase in decimal (EX. 50%)</p>
     </div>
     <div id="rotate" style="display:none">
-        DEGREE:
-        <input id="deg" type="text" value="0.2">
+        Degrees:
+        <input id="deg" type="text" value="90">
         <button onclick="rotate()">ROTATE</button>
-        <p>Please select the amount to rotate (EX 0.1)</p>
+        <p>Please select the amount to rotate (EX 90)</p>
     </div>
     <div id="mirror" style="display:none">
         <button onclick="mirrorX()">MIRROR-X</button>
@@ -67,7 +72,7 @@
         <p>Click the buttons to mirror the image</p>
     </div>
     <div id="shear" style="display:none">
-        <p>you will be able to shear by draggin top/bottom</p>
+        <p>you will be able to shear by clicking on right-click and dragging left/right</p>
     </div>
 
     <canvas id="main" width="1000px" height="800px"></canvas>
@@ -104,6 +109,7 @@
                     })
                 });
                     console.log(datafile);
+                    document.getElementById('center-wrap').style.display = "block";
                     draw();
                 }
             }
@@ -113,9 +119,13 @@
 
     // Changes the current state of the app, depending on the action
     function changeCurrent (action) {
-        document.getElementById(currentAction).style.display = "none";
+        if (currentAction !== "setcenter") {
+            document.getElementById(currentAction).style.display = "none";
+        }
         currentAction = action;
-        document.getElementById(action).style.display = "block";
+        if (action !== "setcenter") {
+            document.getElementById(action).style.display = "block";
+        }
     }
 
     // Draws a line
@@ -163,7 +173,9 @@
     // Scale Image
     function scale() {
         clear();
-        var x = parseFloat(document.getElementById("scalex").value);
+        drawMove(-1 * centerX,-1 * centerY);
+        var percentage = parseFloat(document.getElementById("scalex").value);
+        var x = percentage/100;
         console.log(x);
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
@@ -174,7 +186,14 @@
                 return ['B',item[1]*x,item[2]*x,item[3]*x,item[4]*x,item[5]*x,item[6]*x,item[7]*x,item[8]*x,item[9]]
             }
         });
+        drawMove(centerX,centerY);
         draw();
+    }
+
+    function degreeToRadians(degrees)
+    {
+        var pi = Math.PI;
+        return degrees * (pi/180);
     }
 
     function calcRotateX(x,y,deg) {
@@ -188,7 +207,9 @@
     // Rotate Image
     function rotate() {
         clear();
-        var deg = parseFloat(document.getElementById("deg").value);
+        drawMove(-1 * centerX,-1 * centerY);
+        let deg = parseFloat(document.getElementById("deg").value);
+        deg = degreeToRadians(deg);
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',calcRotateX(item[1],item[2],deg),calcRotateY(item[1],item[2],deg),calcRotateX(item[3],item[4],deg),calcRotateY(item[3],item[4],deg)]
@@ -207,12 +228,14 @@
                     item[9]]
             }
         });
+        drawMove(centerX,centerY);
         draw();
     }
 
     // Mirror Image Horizontally
     function mirrorX() {
         clear();
+        drawMove(-1 * centerX,-1 * centerY);
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',-item[1],item[2],-item[3],item[4]]
@@ -222,13 +245,14 @@
                 return ['B',-item[1],item[2],-item[3],item[4],-item[5],item[6],-item[7],item[8],item[9]]
             }
         });
-        drawMove(1000,0);
+        drawMove(centerX,centerY);
         draw();
     }
 
     // Mirror Image Vertically
     function mirrorY() {
         clear();
+        drawMove(-1 * centerX,-1 * centerY);
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',item[1],-item[2],item[3],-item[4]]
@@ -238,13 +262,14 @@
                 return ['B',item[1],-item[2],item[3],-item[4],item[5],-item[6],item[7],-item[8],item[9]]
             }
         });
-        drawMove(0,800);
+        drawMove(centerX,centerY);
         draw();
     }
 
     // Shear Top
     function shear(a) {
         clear();
+        drawMove(-1 * centerX,-1 * centerY);
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',item[1] + (item[2]*a),item[2],item[3]+(item[4]*a),item[4]]
@@ -260,6 +285,7 @@
                 ]
             }
         });
+        drawMove(centerX,centerY);
         draw();
     }
 
@@ -273,23 +299,27 @@
             } else {
                 drawBezier(item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9])
             }
-        })
+        });
+        if (!customCenterFlag) {
+            calculateMiddlePoint();
+        }
     }
 
     var xMyDown;
     var clickActive = false;
+    let customCenterFlag = false;
 
     // On mouse click event on shear
     function myDown(e) {
-        console.log('click',e.offsetY);
+        console.log('click',e);
         if (currentAction === 'shear') {
             clickActive = true;
-            if (e.offsetY < 400) {
-                topbool = true;
-            } else {
-                topbool = false;
-            }
             xMyDown = e.screenX;
+        } else if (currentAction === 'setcenter') {
+            customCenterFlag = true;
+            centerX = e.offsetX;
+            centerY = e.offsetY;
+            document.getElementById('center-point').innerHTML = '<span style="color:red"> *Custom </span>' + centerX + ',' + centerY;
         }
     }
 
@@ -297,7 +327,7 @@
     function myMove(e) {
         if (currentAction === 'shear') {
             if (clickActive) {
-                shear((e.screenX - xMyDown) / 50000);
+                shear((e.screenX - xMyDown) / 10000);
             }
         }
     }
@@ -351,6 +381,55 @@
         }
         var endPoint = {x:x3, y:y3};
         drawline(currentPoint.x,currentPoint.y,endPoint.x,endPoint.y);
+    }
+
+    let centerX;
+    let centerY;
+
+    function calculateMiddlePoint() {
+        customCenterFlag = false;
+        let smallestX = 9999999;
+        let biggestX = 0;
+        let smallestY = 9999999;
+        let biggestY = 0;
+
+        function checkCoordinates(item,i) {
+                if (i % 2) { // is X
+                    if (item < smallestX) {
+                        smallestX = item;
+                    }
+                    if (item > biggestX) {
+                        biggestX = item;
+                    }
+                } else { // is Y
+                    if (item < smallestY) {
+                        smallestY = item;
+                    }
+                    if (item > biggestY) {
+                        biggestY = item;
+                    }
+                }
+        }
+
+        datafile.forEach((item) => {
+            if (item[0] === 'L') {
+                for (let i=1; i<4; i++) {
+                    checkCoordinates(item[i],i)
+                }
+            } else if (item[0] === 'C') {
+                for (let i=1; i<3; i++) {
+                    checkCoordinates(item[i],i)
+                }
+            } else {
+                for (let i=1; i<9; i++) {
+                    checkCoordinates(item[i],i)
+                }
+            }
+        });
+
+        centerX = Math.round((smallestX + biggestX) / 2);
+        centerY = Math.round((smallestY + biggestY) / 2);
+        document.getElementById('center-point').innerHTML = centerX + ',' + centerY;
     }
 
 
