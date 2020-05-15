@@ -44,7 +44,7 @@
         <button onclick="changeCurrent('shear')">SHEAR</button>
         <button id="clear">CLEAR</button>
     </div>
-        <div id="center-wrap">Current Center Point: <span id="center-point"></span> <button onclick="changeCurrent('setcenter')">Set Center Point</button> <button onclick="calculateMiddlePoint()">Reset</button></div>
+        <div id="center-wrap">Current Center Point: <span id="center-point"></span> <button onclick="changeCurrent('setcenter')">Set Center Point</button> <button onclick="resetCenter()">Reset</button></div>
 </div>
     <div id="move" style="display:none">
         X:
@@ -133,6 +133,15 @@
         ctx.moveTo(x1,y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
+    }
+
+    function markDot(x,y) {
+        ctx.strokeStyle = "red";
+        drawCircle(x,y,1);
+        drawCircle(x,y,2);
+        drawCircle(x,y,3);
+        drawCircle(x,y,6);
+        ctx.strokeStyle = "black";
     }
 
     // Draw a circle
@@ -301,6 +310,8 @@
         });
         if (!customCenterFlag) {
             calculateMiddlePoint();
+        } else {
+            markDot(centerX,centerY);
         }
     }
 
@@ -319,6 +330,7 @@
             centerX = e.offsetX;
             centerY = e.offsetY;
             document.getElementById('center-point').innerHTML = '<span style="color:red"> *Custom </span>' + centerX + ',' + centerY;
+            draw();
         }
     }
 
@@ -432,6 +444,11 @@
         return {
             smallestX,smallestY,biggestX,biggestY
         }
+    }
+
+    function resetCenter() {
+        calculateMiddlePoint();
+        draw();
     }
 
     function initalDraw(maxPoints) { // Scale and move according to the window
