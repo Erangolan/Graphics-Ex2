@@ -91,7 +91,6 @@
 
     document.getElementById('inputfile')
         .addEventListener('change', function(event) {
-            clear();
             var fr = new FileReader();
             event.preventDefault()
             if (this.files[0].name.slice(this.files[0].name.length-4 , this.files[0].name.length) !== '.txt') {
@@ -108,9 +107,10 @@
                             datafile[i][si] = Number(subItem);
                     })
                 });
+                    const maxPoints = calculateMiddlePoint();
                     console.log(datafile);
                     document.getElementById('center-wrap').style.display = "block";
-                    draw();
+                    initalDraw(maxPoints);
                 }
             }
         fr.readAsText(this.files[0]);
@@ -150,7 +150,6 @@
 
     // Initate move sequence
     function move() {
-        clear();
         var x = parseInt(document.getElementById("movex").value);
         var y = parseInt(document.getElementById("movey").value);
         drawMove(x,y);
@@ -172,9 +171,13 @@
 
     // Scale Image
     function scale() {
-        clear();
-        drawMove(-1 * centerX,-1 * centerY);
         var percentage = parseFloat(document.getElementById("scalex").value);
+        drawScale(percentage);
+        draw();
+    }
+
+    function drawScale(percentage) {
+        drawMove(-1 * centerX,-1 * centerY);
         var x = percentage/100;
         console.log(x);
         datafile = datafile.map((item) => {
@@ -187,7 +190,6 @@
             }
         });
         drawMove(centerX,centerY);
-        draw();
     }
 
     function degreeToRadians(degrees)
@@ -206,7 +208,6 @@
 
     // Rotate Image
     function rotate() {
-        clear();
         drawMove(-1 * centerX,-1 * centerY);
         let deg = parseFloat(document.getElementById("deg").value);
         deg = degreeToRadians(deg);
@@ -234,7 +235,6 @@
 
     // Mirror Image Horizontally
     function mirrorX() {
-        clear();
         drawMove(-1 * centerX,-1 * centerY);
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
@@ -251,7 +251,6 @@
 
     // Mirror Image Vertically
     function mirrorY() {
-        clear();
         drawMove(-1 * centerX,-1 * centerY);
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
@@ -268,7 +267,6 @@
 
     // Shear Top
     function shear(a) {
-        clear();
         drawMove(-1 * centerX,-1 * centerY);
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
@@ -291,6 +289,7 @@
 
     // Draw the image after manipulation
     function draw() {
+        clear();
         datafile.forEach((item) => {
             if (item[0] === 'L') {
                 drawline(item[1],item[2],item[3],item[4])
@@ -388,6 +387,7 @@
 
     function calculateMiddlePoint() {
         customCenterFlag = false;
+
         let smallestX = 9999999;
         let biggestX = 0;
         let smallestY = 9999999;
@@ -426,10 +426,26 @@
                 }
             }
         });
-
         centerX = Math.round((smallestX + biggestX) / 2);
         centerY = Math.round((smallestY + biggestY) / 2);
         document.getElementById('center-point').innerHTML = centerX + ',' + centerY;
+        return {
+            smallestX,smallestY,biggestX,biggestY
+        }
+    }
+
+    function initalDraw(maxPoints) { // Scale and move according to the window
+        if (maxPoints.biggestX > 1000 || maxPoints.biggestY > 800) {
+            let xRatio = maxPoints.biggestX/1000;
+            let yRatio = maxPoints.biggestY/800;
+            let biggerRatio = xRatio > yRatio ? xRatio : yRatio;
+            let spacing = 0.1;
+            let biggerPercentage = (1/(biggerRatio + spacing))*100;
+            drawScale(100 - biggerPercentage);
+        }
+        drawMove(500 - centerX, 400 - centerY);
+        calculateMiddlePoint();
+        draw();
     }
 
 
