@@ -18,7 +18,7 @@
             border: 1px solid black;
         }
         input[type=radio] {
-				display:none; 
+				display:none;
 				margin:10px;
 			}
     </style>
@@ -37,7 +37,7 @@
         <button onclick="changeCurrent('scale')">SCALE</button>
         <button onclick="changeCurrent('rotate')">ROTATE</button>
         <button onclick="changeCurrent('mirror')">MIRROR</button>
-        <button onclick="changeCurrent('shear')">STRAFE</button>
+        <button onclick="changeCurrent('shear')">SHEAR</button>
         <button id="clear">CLEAR</button>
     </div>
 </div>
@@ -69,13 +69,13 @@
     <div id="shear" style="display:none">
         <p>you will be able to shear by draggin top/bottom</p>
     </div>
-    
+
     <canvas id="main" width="1000px" height="800px"></canvas>
 </div>
 </body>
 <script>
     document.getElementById("clear").addEventListener("click", clear);
-    
+
     var canvas = document.getElementById("main");
     var ctx = canvas.getContext("2d");
     canvas.onmousedown = myDown;
@@ -86,7 +86,7 @@
 
     document.getElementById('inputfile')
         .addEventListener('change', function(event) {
-            console.log('blala')
+            clear();
             var fr = new FileReader();
             event.preventDefault()
             if (this.files[0].name.slice(this.files[0].name.length-4 , this.files[0].name.length) !== '.txt') {
@@ -99,7 +99,7 @@
                 datafile.forEach((item,i) => {
                     datafile[i] = item.split(',');
                     datafile[i].forEach((subItem,si) => {
-                        if (!isNaN(subItem)) 
+                        if (!isNaN(subItem))
                             datafile[i][si] = Number(subItem);
                     })
                 });
@@ -152,8 +152,10 @@
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',item[1]+x,item[2]+y,item[3]+x,item[4]+y]
-            } else {
+            } else if (item[0] === 'C') {
                 return ['C',item[1]+x,item[2]+y,item[3]]
+            } else {
+                return ['B',item[1]+x,item[2]+y,item[3]+x,item[4]+y,item[5]+x,item[6]+y,item[7]+x,item[8]+y,item[9]]
             }
         });
     }
@@ -166,8 +168,10 @@
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',item[1]*x,item[2]*x,item[3]*x,item[4]*x]
-            } else {
+            } else if (item[0] === 'C') {
                 return ['C',item[1]*x,item[2]*x,item[3]*x]
+            } else {
+                return ['B',item[1]*x,item[2]*x,item[3]*x,item[4]*x,item[5]*x,item[6]*x,item[7]*x,item[8]*x,item[9]]
             }
         });
         draw();
@@ -188,8 +192,19 @@
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',calcRotateX(item[1],item[2],deg),calcRotateY(item[1],item[2],deg),calcRotateX(item[3],item[4],deg),calcRotateY(item[3],item[4],deg)]
-            } else {
+            } else if (item[0] === 'C') {
                 return ['C',calcRotateX(item[1],item[2],deg),calcRotateY(item[1],item[2],deg),item[3]]
+            } else {
+                return ['B',
+                    calcRotateX(item[1],item[2],deg),
+                    calcRotateY(item[1],item[2],deg),
+                    calcRotateX(item[3],item[4],deg),
+                    calcRotateY(item[3],item[4],deg),
+                    calcRotateX(item[5],item[6],deg),
+                    calcRotateY(item[5],item[6],deg),
+                    calcRotateX(item[7],item[8],deg),
+                    calcRotateY(item[7],item[8],deg),
+                    item[9]]
             }
         });
         draw();
@@ -201,8 +216,10 @@
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',-item[1],item[2],-item[3],item[4]]
-            } else {
+            } else if (item[0] === 'C') {
                 return ['C',-item[1],item[2],item[3]]
+            } else {
+                return ['B',-item[1],item[2],-item[3],item[4],-item[5],item[6],-item[7],item[8],item[9]]
             }
         });
         drawMove(1000,0);
@@ -215,8 +232,10 @@
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',item[1],-item[2],item[3],-item[4]]
-            } else {
+            } else if (item[0] === 'C') {
                 return ['C',item[1],-item[2],item[3]]
+            } else {
+                return ['B',item[1],-item[2],item[3],-item[4],item[5],-item[6],item[7],-item[8],item[9]]
             }
         });
         drawMove(0,800);
@@ -224,26 +243,21 @@
     }
 
     // Shear Top
-    function shearTop(a) {
+    function shear(a) {
         clear();
         datafile = datafile.map((item) => {
             if (item[0] === 'L') {
                 return ['L',item[1] + (item[2]*a),item[2],item[3]+(item[4]*a),item[4]]
-            } else {
+            } else if (item[0] === 'C') {
                 return ['C',item[1] + (item[2]*a),item[2],item[3]]
-            }
-        });
-        draw();
-    }
-
-    // Shear Bottom
-    function shearBottom(a) {
-        clear();
-        datafile = datafile.map((item) => {
-            if (item[0] === 'L') {
-                return ['L',item[1] - (item[2]*a),item[2],item[3]-(item[4]*a),item[4]]
             } else {
-                return ['C',item[1] - (item[2]*a),item[2],item[3]]
+                return ['B',
+                    item[1] + (item[2]*a),item[2],
+                    item[3] + (item[4]*a),item[4],
+                    item[5] + (item[6]*a),item[6],
+                    item[7] + (item[8]*a),item[8],
+                    item[9]
+                ]
             }
         });
         draw();
@@ -254,22 +268,26 @@
         datafile.forEach((item) => {
             if (item[0] === 'L') {
                 drawline(item[1],item[2],item[3],item[4])
-            } else {
+            } else if (item[0] === 'C') {
                 drawCircle(item[1],item[2],item[3])
+            } else {
+                drawBezier(item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9])
             }
         })
     }
 
     var xMyDown;
     var clickActive = false;
-    var topbool = false;
 
     // On mouse click event on shear
     function myDown(e) {
+        console.log('click',e.offsetY);
         if (currentAction === 'shear') {
             clickActive = true;
             if (e.offsetY < 400) {
                 topbool = true;
+            } else {
+                topbool = false;
             }
             xMyDown = e.screenX;
         }
@@ -279,11 +297,7 @@
     function myMove(e) {
         if (currentAction === 'shear') {
             if (clickActive) {
-                if (topbool) {
-                    shearBottom((e.screenX - xMyDown) / 10000);
-                } else {
-                    shearTop((e.screenX - xMyDown) / 10000);
-                }
+                shear((e.screenX - xMyDown) / 50000);
             }
         }
     }
@@ -291,9 +305,54 @@
     // on mouse release event on shear
     function myUp() {
         if (currentAction === 'shear') {
-            topbool = false;
             clickActive = false;
         }
     }
+
+    var bezierMatrix = [
+        [-1,3,-3,1],
+        [3,-6,3,0],
+        [-3,3,0,0],
+        [1,0,0,0]
+    ];
+
+    function multiplyMatrices(m1, m2) {
+        var result = [];
+        for (var i=0; i<m1.length; i++) {
+            result[i] = [];
+            for (var j=0; j<m2[0].length; j++) {
+                var sum = 0;
+                for (var k=0; k<m1[0].length; k++) {
+                    sum += m1[i][k] * m2[k][j];
+                }
+                result[i][j] = sum;
+            }
+        }
+        return result;
+    }
+
+    // Draw Bezier using a bezier matrix
+    function drawBezier(x0,y0,x1,y1,x2,y2,x3,y3,T) {
+        var pointsMatrix = [
+            [x0,y0],
+            [x1,y1],
+            [x2,y2],
+            [x3,y3]
+        ];
+        var resultMatrix = multiplyMatrices(bezierMatrix,pointsMatrix);
+        var currentPoint = {x:x0,y:y0};
+        for (var t=0; t<1; t+=1/T) {
+            var templine = {
+                x: resultMatrix[0][0] * Math.pow(t,3) + resultMatrix[1][0] * Math.pow(t,2)  + resultMatrix[2][0] * Math.pow(t,1)  + resultMatrix[3][0],
+                y: resultMatrix[0][1] * Math.pow(t,3) + resultMatrix[1][1] * Math.pow(t,2)  + resultMatrix[2][1] * Math.pow(t,1)  + resultMatrix[3][1],
+            };
+            drawline(currentPoint.x,currentPoint.y,templine.x,templine.y);
+            currentPoint = {x:templine.x,y:templine.y};
+        }
+        var endPoint = {x:x3, y:y3};
+        drawline(currentPoint.x,currentPoint.y,endPoint.x,endPoint.y);
+    }
+
+
 </script>
 </html>
